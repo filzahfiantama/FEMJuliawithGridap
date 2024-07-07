@@ -1,3 +1,19 @@
+The Pluto Notebook(s) in this repository will be deployed as a static html page with the help of the "static-export-template" github repository explained below.
+
+To access the Dashboard containing links to each notebook click here: [Dashboard](https://filzahfiantama.github.io/FEMJuliawithGridap/)
+
+Or access the notebook(s) directly:
+[IntrowithGmsh.jl](https://filzahfiantama.github.io/FEMJuliawithGridap/IntrowithGmsh.html)
+
+
+
+
+
+
+
+
+______________________________________________________________________________________________________
+______________________________________________________________________________________________________
 # static-export-template
 
 This is a demo repository containing two [Pluto](https://github.com/fonsp/Pluto.jl) notebooks that are **automatically converted to HTML** by a github action, and published to github pages! 🌝
