@@ -1,9 +1,27 @@
-The Pluto Notebook(s) in this repository will be deployed as a static html page with the help of the "static-export-template" github repository explained below.
+# A Repo for University Project
+FH Aachen - Energy Economy and Informatics M.Sc.
 
+Created by: Filzah Asyrif Fiantama
+
+Supervised by: Prof. Dr. rer. nat. Darius Mottaghy
+
+*[here some descriptions to necessary preparation and steps in still work in progress]*
+
+### Following are important links for materials used as references within this project:
+
+#### Creating models from scratch
+- [2D Ocean Model within the 'Introduction to Computational Thinking' Project](https://computationalthinking.mit.edu/Fall23/climate_science/2d_advection_diffusion/), with a [Video explanation](https://www.youtube.com/live/waOzCGDNPzk?si=1a5TezNueDXqocEf)
+
+#### Utilizing an open source Julia Package Gridap.jl
+- [Gridap.jl Documentation](https://gridap.github.io/Gridap.jl/stable/)
+- [Tutorials on using Gridap.jl](https://gridap.github.io/Tutorials/dev/#Introduction-1)
+- [An example I made recreating a simple Poisson Problem from a python notebook](https://filzahfiantama.github.io/FEMJuliawithGridap/IntrowithGmsh.html)The Pluto Notebook(s) in this repository will be deployed as a static html page with the help of the "static-export-template" github repository explained below.
+
+__________________________________________________________________________________________________________________
 To access the Dashboard containing links to each notebook click here: [Dashboard](https://filzahfiantama.github.io/FEMJuliawithGridap/)
 
 Or access the notebook(s) directly:
-[IntrowithGmsh.jl](https://filzahfiantama.github.io/FEMJuliawithGridap/IntrowithGmsh.html)
+- [IntrowithGmsh.jl](https://filzahfiantama.github.io/FEMJuliawithGridap/IntrowithGmsh.html)
 
 
 
@@ -12,8 +30,9 @@ Or access the notebook(s) directly:
 
 
 
-______________________________________________________________________________________________________
-______________________________________________________________________________________________________
+__________________________________________________________________________________________________________________
+<ins>below is the readme from the template repository to enable the deployment of pluto notebooks as static html</ins>
+
 # static-export-template
 
 This is a demo repository containing two [Pluto](https://github.com/fonsp/Pluto.jl) notebooks that are **automatically converted to HTML** by a github action, and published to github pages! 🌝
