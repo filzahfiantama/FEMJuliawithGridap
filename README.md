@@ -1,13 +1,88 @@
-# A Repo for University Project
+# Geothermal Energy System Simulation Using Finite Element Methods in Julia
+
 FH Aachen - Energy Economy and Informatics M.Sc.
 
 Created by: Filzah Asyrif Fiantama
 
 Supervised by: Prof. Dr. rer. nat. Darius Mottaghy
 
-*[here some descriptions to necessary preparation and steps in still work in progress]*
+## 1. Introduction
 
-### Following are important links for materials used as references within this project:
+### 1.1 Project Overview
+This Repository is a documentation for a project work as part of my master study within the scope of Geothermal Energy Systems. Simulation of a geothermal model was conducted in the lecture using python. Because the simulation is implemented using Finite Element Method, the python module FENiCs comes in handy and is the building stone of the simulation examples in the lecture.
+
+### 1.2. Goal of the Project
+
+As an alternative for python, Julia was mentioned to have a similarly easy to understand syntax but coupled with a high performance especially in scientific computing. Through this project, we hope to find out the feasibility of implementing FEM (for example starting with solving a simple partial difference equation) as well as the pros and cons of using Julia to simulate a more sophisticated geothermal model.
+
+## 2. Tools and Environment
+
+### 2.1. Julia
+
+The first thing this project needs is of course Julia on our machine. As an open-source programming language, installing Julia is not at all complicated. (https://julialang.org/downloads/) covers the installation of Julia on all operating systems.
+
+**Julia's REPL**
+
+REPL stands for (Read-Eval-Print Loop) and is my best friend in this project, as this command-line interface allow me to execute Julia commands, snippets of code or more relevant, to run a pluto notebook, which will be introduced in chapter 3.1. Opening Julia REPL is as easy as mentioning it in terminal.
+
+[_here comes the image of REPL_]
+
+### 2.2. Package Management
+
+Libraries in python are called Packages in Julia. A close equivalent to 'pip' is here the package management through 'Pkg'. After importing 'Pkg', there are two ways of accessing it. One would be to enter the package management mode by inputting the closed squared bracket ']' which will lead to the following command-line
+
+[_here comes an image of blue bracket command line of Pkg_]
+
+The other method is in my opinion more suitable for a quick installation of a new package because it stays in the normal REPL mode, as shown in the image below.
+
+[_here comes the next pic_]
+
+## 3. Julia Packages
+
+This chapters touches a little bit on the necessary packages within the scope of this project. As mentioned in the previous chapter, all packages can be installed using 'Pkg.add("Package name")'.
+
+### 3.1. Pluto Notebook
+
+[_on pluto notebook_]
+
+### 3.2. PlutoUI
+
+PlutoUI adds interactive UI elements to Pluto notebooks. Most common usage is to create a table of content that can automatically recognize heading titles in the markdown cells in Pluto Notebook. In this notebook, PlutoUI helps displaying saved images in markdown cells.
+
+### 3.3. Gridap
+
+Gridap is an open-source project and it stands for 'grid approximation'(?). As the name states, it offers tools for numerical approximations. In this project, partial differential equations are to be solved using the FEM.
+
+**Within this project, I interacted the most with following sites to both be familiar with the package and learn from various examples on PDE problems:**
+- [Gridap.jl Documentation](https://gridap.github.io/Gridap.jl/stable/)
+- [Tutorials on using Gridap.jl](https://gridap.github.io/Tutorials/dev/#Introduction-1)
+
+### 3.4. Gmsh
+
+[_on Gmsh_]
+Overview: Gmsh is a three-dimensional finite element mesh generator.
+
+### 3.5. GridapGmsh
+
+[_on GridapGmsh_]
+Overview: GridapGmsh integrates Gmsh with Gridap.
+
+## 4. Navigating through the repository
+
+## 5. Modelling in Action
+
+### 5.1. Solving a simple Poisson Problem
+
+[IntrowithGmsh.jl](https://filzahfiantama.github.io/FEMJuliawithGridap/IntrowithGmsh.html)
+
+### 5.2. Implementing a more realistic model
+
+[_here comes the html link]
+
+
+__________________________________________________________________________________________________________________
+
+### Important links for materials used as references within this project:
 
 #### Creating models from scratch
 - [2D Ocean Model within the 'Introduction to Computational Thinking' Project](https://computationalthinking.mit.edu/Fall23/climate_science/2d_advection_diffusion/), with a [Video explanation](https://www.youtube.com/live/waOzCGDNPzk?si=1a5TezNueDXqocEf)
@@ -25,13 +100,9 @@ Or access the notebook(s) directly:
 
 
 
-
-
-
-
-
 __________________________________________________________________________________________________________________
-<ins>below is the readme from the template repository to enable the deployment of pluto notebooks as static html</ins>
+## *This Repository uses a GitHub Template Repository to enable deployment of Pluto Notebook*
+below is the information about the template as written in its readme file.
 
 # static-export-template
 
