@@ -4,100 +4,214 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ eeb9f950-3a1e-11ef-30aa-052f6e186ad9
+# ╔═╡ cb3de813-45e0-454f-9a2e-33c459bcb37d
 using PlutoUI
 
-# ╔═╡ a0303a5c-4acd-4501-8816-ad2df6fb85f9
+# ╔═╡ 090008c3-34ff-4b8e-bb8b-160a33039c02
 using Gridap
 
-# ╔═╡ b85c24df-09f5-40dd-8b92-ad6af64b6169
+# ╔═╡ c0068fd5-67ac-47e9-91da-0c80df54225f
 using GridapGmsh
 
-# ╔═╡ 2129762b-dfa7-4d15-949c-10979a69730b
+# ╔═╡ ca54a28e-1782-4f19-938b-2847c12b4435
 TableOfContents()
 
-# ╔═╡ 6cd03457-0226-4132-99e1-971c41e45428
+# ╔═╡ e592e89f-a8ee-480a-9d78-e2141dad6164
 md"""
-# An Introduction: Solving PDE in Julia with *Gridap*
+# An Introduction: Solving PDE in Julia with FEM using *Gridap*
 
 **Filzah A. Fiantama**
 """
 
-# ╔═╡ ab3d97ca-07b6-4157-894b-81c703950136
+# ╔═╡ b405c295-5bb4-48a0-a7ad-04a049956976
 md"""
 This example revolves around solving a Poisson problem in Julia to give an initial overview on how the process looks like with the help of an open source Package Gridap.
+
+Several Julia Packages are used in this Notebook and thus might have to be installed if not yet done. The necessary Packages are:
+- PlutoUI
+- Gridap
+- Gmsh
+- GridapGmsh
+
+Each Package will be imported into the notebook, where it will be used for the first time to give an overview of the purpose of each Package
 """
 
-# ╔═╡ 49662361-a804-4495-b4bd-97996cf42abb
+# ╔═╡ 43f04312-990e-45ec-b299-3e809e58a638
 md"""
-We construct the test problem using the method of manufactured solutions for this example. The chosen quadratic function for this problem is $u_e(x,y)=1+x^2+2y^2$, the manufactured solution is $u(x,y)=1+x^2+2y^2$ with the source term $f(x,y)= -6$.
+We construct the test problem using the method of manufactured solutions for this example.
+
+The chosen quadratic function for this problem is
+
+$u_e(x,y)=1+x^2+2y^2$
+
+and the manufactured solution is
+
+$u(x,y)=1+x^2+2y^2$
+
+with the source term
+
+$f(x,y)= -6$
 """
 
-# ╔═╡ d1d36053-ff62-404e-8a2e-8fb63512dfcf
+# ╔═╡ c89a2836-233e-4bf5-93ee-958aba338b62
+md"""
+The following name will be used accross the files generated in this notebook
+"""
+
+# ╔═╡ b805cfe2-76c3-47f9-b145-d9835edf29ae
+Filename = "IntroFEM"
+
+# ╔═╡ 0c5b7a4c-d73e-4256-b1c5-fffca27facb8
+md"""
+## Generating the Mesh with GMSH
+
+To solve the problem with FEM we need a mesh that defines the domain, on which the problem will be introduced. The mesh can be generated using the GMSH app if using GUI is prefered. In this example, the geometry and the mesh will be generated completely within the notebook using the Gmsh Package to minimize going back and forth to external applications.
+"""
+
+# ╔═╡ 0303fd1e-d60d-4898-ac6b-f4e228fdc936
+md"""
+### Generating the Geometry
+
+The underlying geometry for meshing in GMSH has the format .geo and is basically a text file containing informations, that can be interpreted by GMSH. Any preparations or settings for the mesh can also be made in this file, such as the density and so on.
+
+For a better clarity, the .geo file generation will be written into a function *write_geo* below, that take the file name as an argument.
+
+*Note: Run the notebook to expand the cell containing the function to look at or change the definition of the geometry*
+"""
+
+# ╔═╡ 3eabcdf0-4db9-11ef-332a-b1c5b59577c1
+function write_geo(filename::String,density::Integer)	
+	# Writing the content of the .geo file
+	geo_text = """
+	// Coordinates for rectangle corners
+	Point(1) = {0, -0, 0, 1.0};
+	Point(2) = {-0, 1, 0, 1.0};
+	Point(3) = {1, 1, 0, 1.0};
+	Point(4) = {1, -0, 0, 1.0};
+	
+	// Lines connecting two points given on the right side
+	Line(1) = {1, 2};
+	Line(2) = {2, 3};
+	Line(3) = {3, 4};
+	Line(4) = {4, 1};
+
+	// Connecting lines, creating a full rectangle
+	Curve Loop(1) = {2, 3, 4, 1};
+
+	// Defining the plane, later labeled as domain
+	Plane Surface(1) = {1};
+	Physical Surface("domain", 6) = {1};
+
+	// Defining the boundary and labeling it
+	Physical Curve("boundary", 5) = {1, 2, 3, 4};
+
+	// Preparing the geometry for meshing
+	Transfinite Surface {1} = {2, 3, 4, 1};
+	// Defining the density of the mesh
+	// --> Dividing each side into n points, not how many rectangles!!!
+	Transfinite Curve {1, 3, 2, 4} = $(density) Using Progression 1;
+	"""
+
+	# Generating the .geo file
+	cleanname = occursin(".geo",filename) ? filename : filename*".geo"
+	open(cleanname,"w") do file
+		write(file, geo_text)
+	end
+end
+
+# ╔═╡ 7cefe742-9a6f-438a-977b-f1b69ca39e7b
+md"""
+Now we generate the .geo file by passing the file name and the desired density
+"""
+
+# ╔═╡ 45813257-4fad-4382-b3e1-6343b1fd1730
+write_geo(Filename,9)
+
+# ╔═╡ 4f54416a-6b45-466c-be08-bc901cf613ed
+md"""
+Now that we have the necessary .geo file, we can start meshing on top of the geometry. Note that the following codes only generate the mesh without making any more adjustment to the .geo file.
+
+We will need the method *gmsh* from the Package Gmsh to run the command for meshing without needing to have the executable installed or located in our PATH.
+"""
+
+# ╔═╡ 9ab996ea-7424-48d0-86cb-eb3d743d2977
+import Gmsh:gmsh
+
+# ╔═╡ 0e22f092-6720-42f5-8745-ecb20c186796
+begin
+	gmsh.initialize()              
+	gmsh.model.add("Intro_Model")	# Defining a new model
+	gmsh.open(Filename*".geo")		# Reading the .geo file
+	gmsh.model.mesh.generate(2)		# Geenerating Mesh in 2D
+	gmsh.write(Filename*".msh")		# Writing the .msh file
+	gmsh.finalize()
+end
+
+# ╔═╡ 7f7e4f2b-0b0b-4e69-b8ba-39eb73cce8a7
 md"""
 ## Creating a domain for the problem
 
 For this example, we want to create a unit square $\Omega=[0,1]\times [0,1]$. One of the way to create a domain to be used in Julia is to build it in GMSH, an open source 3D finite element mesh generator. To be able to use Gridap on top of a Finite Element mesh generated by GMSH, we need to also import following package.
 """
 
-# ╔═╡ ff511a76-7659-44e2-a7d3-f50249d485d6
-mesh = GmshDiscreteModel("meshtrial.msh")
+# ╔═╡ 5997779d-9fe6-4510-81e8-7ab0031712f5
+mesh = GmshDiscreteModel(Filename*".msh")
 
-# ╔═╡ 8cd83093-ab92-4b85-a6be-0d747a891cf0
+# ╔═╡ d64a1afe-2711-43bc-addb-5a351cd11e9a
+writevtk(mesh,Filename)
+
+# ╔═╡ 3504d6b6-e521-49be-96da-73dd69cbacc6
 md"""
 Unfortunately, the easiest way to vizualise Grid and later also the resulting solution is to generate a a vtk file. This file ending with ".vtu" can be opened and processed in Paraview.
 """
 
-# ╔═╡ 04b01629-161b-49b2-b489-4c5c80ca84ee
-#writevtk(mesh,"modelgridGmsh")
-
-# ╔═╡ 4eacb7fe-b44d-40c7-b186-392c5c40d20e
+# ╔═╡ 95d585fc-48ad-4f81-a152-e32397301bdf
 md"""
 Here's the resulting mesh image exported from Paraview
-$(PlutoUI.LocalResource("meshGmsh.png"))
+$(PlutoUI.LocalResource(Filename*"_mesh.png"))
 """
 
-# ╔═╡ e3548ef0-317d-45c4-9c46-443375442501
+# ╔═╡ af1bcfea-af27-4144-91c8-3722ad2a9713
 md"""
-#### *CartesianDiscreteModel* in Gridap
+#### Alternative Mesh: *CartesianDiscreteModel* in Gridap
 An alternative is the available within Gridap for simple rectangle mesh using the function *CartesianDiscreteModel(domain,partition)*.\
 We can define the domain by determining the 4 points of a rectangle (xmin,xmax,ymin,ymax) for a 2D geometry
 Adjusting the partition (nx,ny) will determine the mesh density.
 """
 
-# ╔═╡ a17a3aba-fb6d-491d-a7ff-7a64ffd106a2
+# ╔═╡ a484d62b-b482-4ffd-ae8c-4769b5321a53
 meshRect = CartesianDiscreteModel((0,1,0,1),(8,8))
 
-# ╔═╡ ceef845a-8317-4d98-94fe-9198c5ea650f
-writevtk(meshRect,"modelgridRect")
+# ╔═╡ e910b33d-22dd-4ed5-8491-d62b00c56de0
+writevtk(meshRect,Filename*"_Alt")
 
-# ╔═╡ 22267e0b-5384-4c46-b41c-5569d31aa66a
+# ╔═╡ 498d0308-dced-4613-ad82-7e3049cd4f8d
 md"""
 The Cartesian Discrete Mesh looks something like this:
-$(PlutoUI.LocalResource("meshRect.png"))
+$(PlutoUI.LocalResource(Filename*"_altmesh.png"))
 """
 
-# ╔═╡ 8fb494b1-965e-4e8a-b134-07984f166aa4
+# ╔═╡ a0b16c08-5053-443e-bde6-9a53d38375b0
 md"""
-However, we will continue using the mesh generated by GMSH, as it depicts exactly the mesh we want to have.
+However, we will continue using the mesh generated by GMSH within this example, as it depicts exactly the mesh we want to have.
 """
 
-# ╔═╡ 83c4c3ec-e1ac-4e30-bbab-ca3f3d19d5e8
+# ╔═╡ 0f43da27-a406-4fbf-a131-7d63daad5aba
 md"""
 ## Test and Trial Space
 
 This step serves for generating a discrete approximation of the test and trial Finite Element spaces with the constructor *TestFESpace* and *TrialFESpace*
 """
 
-# ╔═╡ 567e88ca-428a-49a1-807a-023691174087
+# ╔═╡ 617511c7-781b-4757-9f52-55bdb9174bf4
 md"""
 To build the discretization of the Test Space as the standard Conforming Lagrangian FE Space, we define the desired type of FE interpolation with *ReferenceFE*. In this case a scalar-valued Lagrangian FE Space of order 1.
 """
 
-# ╔═╡ 4a5c5bd6-4f49-43fa-8910-6d604fd65dd7
+# ╔═╡ 687acce8-a869-44fc-8e1a-e28fd404d6da
 reffe = ReferenceFE(lagrangian, Float64, 1)
 
-# ╔═╡ 79aafdb7-3edd-440b-bff3-6edaa46d63db
+# ╔═╡ b2f81325-a1cf-492f-8253-731f72f8d99e
 md"""
 The defined Reference FE will be set in the second argument of the method *TestFESpace*.
 
@@ -108,164 +222,174 @@ The argument *conformity = :H1* means that resulting interpolation space is a su
 To identify the Dirichlet boundary, we can use the key-word *dirichlet_tags* to mark a certain physical group defined in GMSH (in this case tagged with 'boundary') as Dirichlet.
 """
 
-# ╔═╡ 3ffda93e-2320-46d4-bfd8-75cec749cad6
+# ╔═╡ 1e7e3f80-b724-4114-a557-e9d47a47e83f
 V = TestFESpace(mesh, reffe, conformity=:H1, dirichlet_tags="boundary")
 
-# ╔═╡ 5ba382d4-35a2-4e6d-9b5b-24ffd291a3d4
+# ╔═╡ 29353bbf-6d8b-4ba9-b40c-e0e82eaea818
 md"""
 For the Dirichlet boundary condition, we can defined a generic function in Julia by using a very similar form to the actual mathematical expression.
 """
 
-# ╔═╡ 1906c6c2-45ec-4514-a01d-341e532efab8
+# ╔═╡ cdaaf5c1-95fb-42bc-880e-0199ff5e3a55
 u_D(x) = 1 + x[1]^2 + 2 * x[2]^2
 
-# ╔═╡ b9057fc1-7add-455d-8843-718a780367dd
+# ╔═╡ c07dc239-f5f6-4ba9-975c-695519356d79
 md"""
 We then pass the function as we define the Trial FE Space in the second argument of the method *TrialFESpace*
 """
 
-# ╔═╡ 293b6912-7877-4ec6-acd4-968380131442
+# ╔═╡ ce746d43-0ba1-4bc2-a8c4-c40aead6c5af
 U = TrialFESpace(V,u_D)
 
-# ╔═╡ db188779-3851-4de2-aec0-51e199d3268a
+# ╔═╡ 15aec42b-c5e1-4095-a11e-14939343f787
 md"""
 ## Numerical Integration
 
 For the computation of the integral on the domain $\Omega$ we define the integration mesh with *Triangulation*.
 """
 
-# ╔═╡ 7d8dc3b3-2350-4ffb-8913-697fd7150153
+# ╔═╡ 972be1ee-3219-4e21-97f6-72239b836867
 Ω = Triangulation(mesh)
 
-# ╔═╡ a70ed644-2987-4f85-ba10-276f9fa72d08
+# ╔═╡ fc316743-cece-4241-a2ca-87031360c8d8
 md"""
 By building the Lebesgue measure with *Measure*, writing down integrals in a syntax similar to the mathematical notation will be possible.
 """
 
-# ╔═╡ 308c97d7-7f4b-42db-b4cd-7707274e9630
+# ╔═╡ 10046949-c25c-4bfc-ae66-819c2751fd48
 dΩ = Measure(Ω,2)
 
-# ╔═╡ ffbd7a54-63f0-4c57-894c-45da2f82e17f
+# ╔═╡ e2420ef3-570a-46e8-9835-ed478f1f183f
 md"""
 ## Defining the variational problem
-"""
 
-# ╔═╡ 2c3aeed6-7881-43ab-bacb-6777d6995b05
-md"""
 To define the weak form, we need to define several functions.
 
 Starting with the source term $f=-6$,
 """
 
-# ╔═╡ 3aa633f5-dfac-4e5b-8912-d8ddc3bbf218
+# ╔═╡ 10a960da-db8a-4a2e-98b9-0c85a86ab7a5
 f(x) = -6
 
-# ╔═╡ 4215dce9-8057-4ebe-b808-661f5841512e
+# ╔═╡ abce5d54-53bd-43e2-8b9b-1e5f5aa87267
 md"""
 followed by the bi-linear form $a(u,v) = \int_{\Omega} \nabla u \cdot \nabla v ~\mathrm{d} x$
 """
 
-# ╔═╡ 0fbb8e5f-59b3-45c5-a120-ffdd9bd6cb0c
+# ╔═╡ e04723fd-d285-4179-ae90-0c80b81bb171
 a(u,v) = ∫( ∇(v)⋅∇(u) )dΩ
 
-# ╔═╡ 9ac2dcfa-3551-49d1-a75d-de2bbfe95bfc
+# ╔═╡ aa215000-1ae5-4c12-ad3f-3c44c90ee154
 md"""
 and lastly the linear form $L(v) = \int_{\Omega} fv ~\mathrm{d} x$.
 """
 
-# ╔═╡ 2b4263fd-6409-49c6-be9d-837f6061c0c6
+# ╔═╡ 922f06fd-bef6-44a9-909a-a08910eff2cd
 l(v) = ∫( v*f )dΩ
 
-# ╔═╡ 9556431a-dac5-4281-a6bf-d25b1b4ce6a4
+# ╔═╡ b2192baf-fee1-4943-a62a-284a659ca3e4
 md"""
 ## Building the FE Problem
-"""
 
-# ╔═╡ 5117650b-3bd3-4a89-938b-d7ba24799e5f
-md"""
 If we're solving a linear problem, we can use *AffineFEOperator*, a concrete type from the abstact type *FEOperator*. The method expects bilinear and linear function from the weak form, the test and trial spaces as arguments.
 """
 
-# ╔═╡ 17106983-858f-4554-9c34-7796f44356be
+# ╔═╡ 3572952b-7228-475f-82b7-a71f3ceb3c5f
 op = AffineFEOperator(a, l, U, V)
 
-# ╔═╡ e344e676-7c03-4731-becb-17fa0a88e0ad
+# ╔═╡ d641a079-67b5-4f25-bda5-7e6c3d347cd2
 md"""
 ## Solving the FE Problem
-"""
 
-# ╔═╡ dbc05499-871d-4034-bc12-22da0094b3b9
-md"""
 The FE Problem can be solved with the concrete type *LinearFESolver* for example, when we are dealing with linear problems. By default, the solving in Gridap is done with types inheriting from abstract type *FESolver*
 """
 
-# ╔═╡ 6c353452-8a33-4824-9693-fa79e194c03f
+# ╔═╡ 44c14bff-9bee-4f13-ab0e-81cec34f0262
 begin
 	ls = LUSolver()
 	solver = LinearFESolver(ls)
 end
 
-# ╔═╡ 079cc81c-24d7-4577-ba87-335db242d649
+# ╔═╡ 3291c462-5a0d-4248-8db0-a338c07bddfb
 uh = solve(solver,op)
 
-# ╔═╡ 26153482-8ab2-4dd2-98f0-7179bcabdea9
+# ╔═╡ 905239eb-a545-4c5a-b32c-e71e8d0e3db0
 md"""
 ### Save solution as a vtk file for visualization
 """
 
-# ╔═╡ 24d1f40e-ed2c-4469-8809-9a6757d6a537
-#writevtk(Ω,"results_Gmsh boundary",cellfields=["uh"=>uh])
+# ╔═╡ efd5823d-b43d-4622-9d67-17d669133709
+writevtk(Ω,"results_Gmsh boundary",cellfields=["uh"=>uh])
 
-# ╔═╡ ce3f36a6-542c-4bde-8596-41b5de5cfbb0
+# ╔═╡ 225ffb90-96b8-480a-88d4-2cd78acd0ac8
 md"""
 Here's the resulting heat map of the solution 'uh' exported from Paraview
-$(PlutoUI.LocalResource("solution_heatmapGmsh.png"))
+$(PlutoUI.LocalResource(Filename*"_solution.png"))
 """
 
-# ╔═╡ c5c50e79-c5b0-4160-85e1-e3709f591847
+# ╔═╡ 5e20d3c9-3a1c-4354-bee2-4d12cfca4186
 md"""
-# Beurteilung an die Umsetzung in Julia und Pluto Notebook
+# First Impressions
 """
 
-# ╔═╡ dbf3a688-9103-4dae-893b-2d6d8ab18acd
+# ╔═╡ 594d6da1-5777-4e9a-bfab-cc8b3a58edf2
 md"""
-## Anmerkungen
+## on Julia and Pluto Notebook
 """
 
-# ╔═╡ 4e350e88-6118-4341-93e3-6c4f61599fa2
+# ╔═╡ cea57a71-bc2f-4ec0-a4e4-98f01b992846
 md"""
-### Vorteil
+##### The Plus:
 
-- **Reactivity**: Changing a value or redefining variables used in another cell will automatically update the output without having to rerun each cell separately
-- **Flexibility**: The order of the cell doesn't present the order of cell execution. This allows us to organize and/or structure our notebook the way we want
-- **Familiar Notation**: The possibility to write functions very close to their original mathematical notation makes it easier
+- **Reactivity**: Making a change in one cell will automatically update another cell containing or using the same variables, functions, etc. without having to rerun each cell separately
+- **Flexibility**: The order of the cell doesn't represent the order of cell execution. This allows us to organize and structure our notebook in a more reasonable order
+- **Easy Access**: Initializing Julia and Pluto Notebook is simple and straight forward. The command prompt to run and a browser as an "IDE" are our best friend.
 """
 
-# ╔═╡ 4482c33a-92f4-4b19-923e-7a99b944aa1a
+# ╔═╡ 7491de87-cfad-44b3-bafa-db93051b4d0e
 md"""
-### Nachteil
+##### The Minus:
 
-- **External Software involved**: The need to use GMSH to generate a mesh and also to process objects built in the code such as the mesh or the solution in an external App, means extra steps and a less ideal work flow when we change things.
+- **Unconventional Notebook**: Getting used to a structured notebook such as Jupyter doesn't mean one is fit to navigate around Pluto Notebook. It takes time and some work to take full advantage of Pluto Notebook, especially in the scope of creating an interactive note for learning or presenting 
 """
 
-# ╔═╡ 99be0d55-2189-427f-bc02-b97f23ffcca4
+# ╔═╡ 66c96655-453a-49a8-980a-97f70418a66c
+md"""
+## on Gridap
+"""
+
+# ╔═╡ 97fc7299-e768-4a84-8efc-f7f5b545a3dc
+md"""
+##### The Plus:
+
+- **Familiar Notations**: Beside the possibility to use symbols within Julia, writing functions very close to their original mathematical notation makes it easier to understand and follow
+"""
+
+# ╔═╡ b5b1b933-953b-4ec9-ac36-7d95a5ddd4bf
+md"""
+##### The Minus:
+
+- **Hard to Plot**: While GMSH can be executed with Julia instead of having the need to use the application, we still need Paraview to observe and visualize the meshes and solutions. Small adjustments won't be directly visible and thus will slow down the workflow 
+"""
+
+# ╔═╡ a5a6085c-c577-4d49-9bf9-b253acbad99c
 md"""
 # References
-"""
 
-# ╔═╡ 77ea2469-a95b-4eb8-a691-fa283fa1a689
-md"""
-[1] https://gridap.github.io/Tutorials/stable/
+[1] https://gridap.github.io/Tutorials/stable/\
+[2] https://github.com/JuliaFEM/Gmsh.jl\
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+Gmsh = "705231aa-382f-11e9-3f0c-b7cb4346fdeb"
 Gridap = "56d4f2e9-7ea1-5844-9cf6-b9c51ca7ce8e"
 GridapGmsh = "3025c34a-b394-11e9-2a55-3fee550c04c8"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
+Gmsh = "~0.3.1"
 Gridap = "~0.18.2"
 GridapGmsh = "~0.7.1"
 PlutoUI = "~0.7.59"
@@ -277,7 +401,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.4"
 manifest_format = "2.0"
-project_hash = "0e9677d9882bd702b66466c9522e29c0fbae8515"
+project_hash = "39d8c1a3f787a3ca0f817b23fdeedc792c781a1f"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -635,6 +759,12 @@ deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libic
 git-tree-sha1 = "7c82e6a6cd34e9d935e9aa4051b66c6ff3af59ba"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.80.2+0"
+
+[[deps.Gmsh]]
+deps = ["gmsh_jll"]
+git-tree-sha1 = "6d815101e62722f4e323514c9fc704007d4da2e3"
+uuid = "705231aa-382f-11e9-3f0c-b7cb4346fdeb"
+version = "0.3.1"
 
 [[deps.Gridap]]
 deps = ["AbstractTrees", "BSON", "BlockArrays", "Combinatorics", "DataStructures", "DocStringExtensions", "FastGaussQuadrature", "FileIO", "FillArrays", "ForwardDiff", "JLD2", "JSON", "LineSearches", "LinearAlgebra", "NLsolve", "NearestNeighbors", "PolynomialBases", "QuadGK", "Random", "SparseArrays", "SparseMatricesCSR", "StaticArrays", "Statistics", "Test", "WriteVTK"]
@@ -1398,58 +1528,67 @@ version = "17.4.0+2"
 """
 
 # ╔═╡ Cell order:
-# ╟─eeb9f950-3a1e-11ef-30aa-052f6e186ad9
-# ╟─2129762b-dfa7-4d15-949c-10979a69730b
-# ╟─6cd03457-0226-4132-99e1-971c41e45428
-# ╟─ab3d97ca-07b6-4157-894b-81c703950136
-# ╠═a0303a5c-4acd-4501-8816-ad2df6fb85f9
-# ╟─49662361-a804-4495-b4bd-97996cf42abb
-# ╟─d1d36053-ff62-404e-8a2e-8fb63512dfcf
-# ╠═b85c24df-09f5-40dd-8b92-ad6af64b6169
-# ╠═ff511a76-7659-44e2-a7d3-f50249d485d6
-# ╟─8cd83093-ab92-4b85-a6be-0d747a891cf0
-# ╠═04b01629-161b-49b2-b489-4c5c80ca84ee
-# ╟─4eacb7fe-b44d-40c7-b186-392c5c40d20e
-# ╟─e3548ef0-317d-45c4-9c46-443375442501
-# ╠═a17a3aba-fb6d-491d-a7ff-7a64ffd106a2
-# ╠═ceef845a-8317-4d98-94fe-9198c5ea650f
-# ╟─22267e0b-5384-4c46-b41c-5569d31aa66a
-# ╟─8fb494b1-965e-4e8a-b134-07984f166aa4
-# ╟─83c4c3ec-e1ac-4e30-bbab-ca3f3d19d5e8
-# ╟─567e88ca-428a-49a1-807a-023691174087
-# ╠═4a5c5bd6-4f49-43fa-8910-6d604fd65dd7
-# ╟─79aafdb7-3edd-440b-bff3-6edaa46d63db
-# ╠═3ffda93e-2320-46d4-bfd8-75cec749cad6
-# ╟─5ba382d4-35a2-4e6d-9b5b-24ffd291a3d4
-# ╠═1906c6c2-45ec-4514-a01d-341e532efab8
-# ╟─b9057fc1-7add-455d-8843-718a780367dd
-# ╠═293b6912-7877-4ec6-acd4-968380131442
-# ╟─db188779-3851-4de2-aec0-51e199d3268a
-# ╠═7d8dc3b3-2350-4ffb-8913-697fd7150153
-# ╟─a70ed644-2987-4f85-ba10-276f9fa72d08
-# ╠═308c97d7-7f4b-42db-b4cd-7707274e9630
-# ╟─ffbd7a54-63f0-4c57-894c-45da2f82e17f
-# ╟─2c3aeed6-7881-43ab-bacb-6777d6995b05
-# ╠═3aa633f5-dfac-4e5b-8912-d8ddc3bbf218
-# ╟─4215dce9-8057-4ebe-b808-661f5841512e
-# ╠═0fbb8e5f-59b3-45c5-a120-ffdd9bd6cb0c
-# ╟─9ac2dcfa-3551-49d1-a75d-de2bbfe95bfc
-# ╠═2b4263fd-6409-49c6-be9d-837f6061c0c6
-# ╟─9556431a-dac5-4281-a6bf-d25b1b4ce6a4
-# ╟─5117650b-3bd3-4a89-938b-d7ba24799e5f
-# ╠═17106983-858f-4554-9c34-7796f44356be
-# ╟─e344e676-7c03-4731-becb-17fa0a88e0ad
-# ╟─dbc05499-871d-4034-bc12-22da0094b3b9
-# ╠═6c353452-8a33-4824-9693-fa79e194c03f
-# ╠═079cc81c-24d7-4577-ba87-335db242d649
-# ╟─26153482-8ab2-4dd2-98f0-7179bcabdea9
-# ╠═24d1f40e-ed2c-4469-8809-9a6757d6a537
-# ╟─ce3f36a6-542c-4bde-8596-41b5de5cfbb0
-# ╟─c5c50e79-c5b0-4160-85e1-e3709f591847
-# ╟─dbf3a688-9103-4dae-893b-2d6d8ab18acd
-# ╟─4e350e88-6118-4341-93e3-6c4f61599fa2
-# ╟─4482c33a-92f4-4b19-923e-7a99b944aa1a
-# ╟─99be0d55-2189-427f-bc02-b97f23ffcca4
-# ╟─77ea2469-a95b-4eb8-a691-fa283fa1a689
+# ╟─cb3de813-45e0-454f-9a2e-33c459bcb37d
+# ╟─ca54a28e-1782-4f19-938b-2847c12b4435
+# ╟─e592e89f-a8ee-480a-9d78-e2141dad6164
+# ╟─b405c295-5bb4-48a0-a7ad-04a049956976
+# ╠═090008c3-34ff-4b8e-bb8b-160a33039c02
+# ╟─43f04312-990e-45ec-b299-3e809e58a638
+# ╟─c89a2836-233e-4bf5-93ee-958aba338b62
+# ╠═b805cfe2-76c3-47f9-b145-d9835edf29ae
+# ╟─0c5b7a4c-d73e-4256-b1c5-fffca27facb8
+# ╟─0303fd1e-d60d-4898-ac6b-f4e228fdc936
+# ╠═3eabcdf0-4db9-11ef-332a-b1c5b59577c1
+# ╟─7cefe742-9a6f-438a-977b-f1b69ca39e7b
+# ╠═45813257-4fad-4382-b3e1-6343b1fd1730
+# ╟─4f54416a-6b45-466c-be08-bc901cf613ed
+# ╠═9ab996ea-7424-48d0-86cb-eb3d743d2977
+# ╠═0e22f092-6720-42f5-8745-ecb20c186796
+# ╟─7f7e4f2b-0b0b-4e69-b8ba-39eb73cce8a7
+# ╠═c0068fd5-67ac-47e9-91da-0c80df54225f
+# ╠═5997779d-9fe6-4510-81e8-7ab0031712f5
+# ╠═d64a1afe-2711-43bc-addb-5a351cd11e9a
+# ╟─3504d6b6-e521-49be-96da-73dd69cbacc6
+# ╟─95d585fc-48ad-4f81-a152-e32397301bdf
+# ╟─af1bcfea-af27-4144-91c8-3722ad2a9713
+# ╠═a484d62b-b482-4ffd-ae8c-4769b5321a53
+# ╠═e910b33d-22dd-4ed5-8491-d62b00c56de0
+# ╟─498d0308-dced-4613-ad82-7e3049cd4f8d
+# ╟─a0b16c08-5053-443e-bde6-9a53d38375b0
+# ╟─0f43da27-a406-4fbf-a131-7d63daad5aba
+# ╟─617511c7-781b-4757-9f52-55bdb9174bf4
+# ╠═687acce8-a869-44fc-8e1a-e28fd404d6da
+# ╟─b2f81325-a1cf-492f-8253-731f72f8d99e
+# ╠═1e7e3f80-b724-4114-a557-e9d47a47e83f
+# ╟─29353bbf-6d8b-4ba9-b40c-e0e82eaea818
+# ╠═cdaaf5c1-95fb-42bc-880e-0199ff5e3a55
+# ╟─c07dc239-f5f6-4ba9-975c-695519356d79
+# ╠═ce746d43-0ba1-4bc2-a8c4-c40aead6c5af
+# ╟─15aec42b-c5e1-4095-a11e-14939343f787
+# ╠═972be1ee-3219-4e21-97f6-72239b836867
+# ╟─fc316743-cece-4241-a2ca-87031360c8d8
+# ╠═10046949-c25c-4bfc-ae66-819c2751fd48
+# ╟─e2420ef3-570a-46e8-9835-ed478f1f183f
+# ╠═10a960da-db8a-4a2e-98b9-0c85a86ab7a5
+# ╟─abce5d54-53bd-43e2-8b9b-1e5f5aa87267
+# ╠═e04723fd-d285-4179-ae90-0c80b81bb171
+# ╟─aa215000-1ae5-4c12-ad3f-3c44c90ee154
+# ╠═922f06fd-bef6-44a9-909a-a08910eff2cd
+# ╟─b2192baf-fee1-4943-a62a-284a659ca3e4
+# ╠═3572952b-7228-475f-82b7-a71f3ceb3c5f
+# ╟─d641a079-67b5-4f25-bda5-7e6c3d347cd2
+# ╠═44c14bff-9bee-4f13-ab0e-81cec34f0262
+# ╠═3291c462-5a0d-4248-8db0-a338c07bddfb
+# ╠═905239eb-a545-4c5a-b32c-e71e8d0e3db0
+# ╠═efd5823d-b43d-4622-9d67-17d669133709
+# ╟─225ffb90-96b8-480a-88d4-2cd78acd0ac8
+# ╟─5e20d3c9-3a1c-4354-bee2-4d12cfca4186
+# ╟─594d6da1-5777-4e9a-bfab-cc8b3a58edf2
+# ╟─cea57a71-bc2f-4ec0-a4e4-98f01b992846
+# ╟─7491de87-cfad-44b3-bafa-db93051b4d0e
+# ╟─66c96655-453a-49a8-980a-97f70418a66c
+# ╟─97fc7299-e768-4a84-8efc-f7f5b545a3dc
+# ╟─b5b1b933-953b-4ec9-ac36-7d95a5ddd4bf
+# ╟─a5a6085c-c577-4d49-9bf9-b253acbad99c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
