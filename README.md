@@ -6,6 +6,10 @@ Created by: Filzah Asyrif Fiantama
 
 Supervised by: Prof. Dr. rer. nat. Darius Mottaghy
 
+#### Quick access to the pluto notebooks
+- [Solving a simple Poisson problem](https://filzahfiantama.github.io/FEMJuliawithGridap/IntrowithGmsh.html)
+- 
+
 ## 1. Introduction
 
 ### 1.1 Project Overview
@@ -19,23 +23,22 @@ As an alternative for python, Julia was mentioned to have a similarly easy to un
 
 ### 2.1. Julia
 
-The first thing this project needs is of course Julia on our machine. As an open-source programming language, installing Julia is not at all complicated. (https://julialang.org/downloads/) covers the installation of Julia on all operating systems.
+The first thing this project needs is of course Julia on our machine. As an open-source programming language, installing Julia is not at all complicated. https://julialang.org/downloads/ covers the installation of Julia on all operating systems.
 
-**Julia's REPL**
+#### Julia's REPL
 
-REPL stands for (Read-Eval-Print Loop) and is my best friend in this project, as this command-line interface allow me to execute Julia commands, snippets of code or more relevant, to run a pluto notebook, which will be introduced in chapter 3.1. Opening Julia REPL is as easy as mentioning it in terminal.
+REPL stands for (Read-Eval-Print Loop) and is my best friend in this project, as this command-line interface allow me to execute Julia commands, snippets of code or more relevant, to run a pluto notebook, which will be introduced in chapter 3.1. Opening Julia REPL is as easy as mentioning 'julia' in terminal.
 
-[_here comes the image of REPL_]
+![julia repl](images/julia_REPL.png)
 
-### 2.2. Package Management
+### 2.2. Package Management Pkg
 
-Libraries in python are called Packages in Julia. A close equivalent to 'pip' is here the package management through 'Pkg'. After importing 'Pkg', there are two ways of accessing it. One would be to enter the package management mode by inputting the closed squared bracket ']' which will lead to the following command-line
+Libraries in python are called Packages in Julia. A close equivalent to 'pip' is here the package management through 'Pkg'. I will touch only on how to add new packages using Pkg. A more detailed documentation is available under https://pkgdocs.julialang.org/v1/.
 
-[_here comes an image of blue bracket command line of Pkg_]
+Pkg also comes with a REPL that can be accessed by inputting closing square bracket ']', as shown in the picture below. The picture also demonstrates how a package is added through this REPL.
 
-The other method is in my opinion more suitable for a quick installation of a new package because it stays in the normal REPL mode, as shown in the image below.
+![pkg repl](images/pkg_add.png)
 
-[_here comes the next pic_]
 
 ## 3. Julia Packages
 
@@ -43,7 +46,9 @@ This chapters touches a little bit on the necessary packages within the scope of
 
 ### 3.1. Pluto Notebook
 
-[_on pluto notebook_]
+Pluto Notebook is known for its reactivity and interactivity. Both allows for a more flexible design that suits the need. After having Pluto installed through Pkg, it has to be imported then run in the Julia REPL. As the output says in the REPL, a Pluto Notebook instance will be opened in the default browser.
+
+![pluto run](images/pluto_run.png)
 
 ### 3.2. PlutoUI
 
@@ -53,35 +58,22 @@ PlutoUI adds interactive UI elements to Pluto notebooks. Most common usage is to
 
 Gridap is an open-source project and it stands for 'grid approximation'(?). As the name states, it offers tools for numerical approximations. In this project, partial differential equations are to be solved using the FEM.
 
-**Within this project, I interacted the most with following sites to both be familiar with the package and learn from various examples on PDE problems:**
-- [Gridap.jl Documentation](https://gridap.github.io/Gridap.jl/stable/)
-- [Tutorials on using Gridap.jl](https://gridap.github.io/Tutorials/dev/#Introduction-1)
+**Within this project, I interacted with following sites the most:**
+- [Gridap.jl Documentation](https://gridap.github.io/Gridap.jl/stable/) to look up for informations. Unfortunately not all methods are well documented, or at least it is still in development.
+- [Tutorials on using Gridap.jl](https://gridap.github.io/Tutorials/dev/#Introduction-1) to compliment the documentation, where Gridap package is put to use with various use cases. These tutorials helped me find a suitable use of Gridap for my specific need.
 
 ### 3.4. Gmsh
 
-[_on Gmsh_]
-Overview: Gmsh is a three-dimensional finite element mesh generator.
+Gmsh is an open-source three-dimensional finite element mesh generator and through this same named Julia package, mesh can be generated inside Julia to avoid going back and forth between Pluto Notebook and the GMSH software.
 
 ### 3.5. GridapGmsh
 
-[_on GridapGmsh_]
-Overview: GridapGmsh integrates Gmsh with Gridap.
+This package serves as a bridge to integrate Gridap and Gmsh, such as reading the mesh files generated by Gmsh.
 
-## 4. Navigating through the repository
 
-## 5. Modelling in Action
-
-### 5.1. Solving a simple Poisson Problem
-
-[IntrowithGmsh.jl](https://filzahfiantama.github.io/FEMJuliawithGridap/IntrowithGmsh.html)
-
-### 5.2. Implementing a more realistic model
-
-[_here comes the html link]
 
 
 __________________________________________________________________________________________________________________
-
 ### Important links for materials used as references within this project:
 
 #### Creating models from scratch
@@ -95,14 +87,10 @@ ________________________________________________________________________________
 __________________________________________________________________________________________________________________
 To access the Dashboard containing links to each notebook click here: [Dashboard](https://filzahfiantama.github.io/FEMJuliawithGridap/)
 
-Or access the notebook(s) directly:
-- [IntrowithGmsh.jl](https://filzahfiantama.github.io/FEMJuliawithGridap/IntrowithGmsh.html)
-
-
 
 __________________________________________________________________________________________________________________
 ## *This Repository uses a GitHub Template Repository to enable deployment of Pluto Notebook*
-below is the information about the template as written in its readme file.
+To credit the template i will insert informations on it below
 
 # static-export-template
 
