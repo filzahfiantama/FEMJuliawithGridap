@@ -7,7 +7,7 @@ Created by: Filzah Asyrif Fiantama
 Supervised by: Prof. Dr. rer. nat. Darius Mottaghy
 
 #### Quick access to the pluto notebooks
-- [Solving a simple Poisson problem](https://filzahfiantama.github.io/FEMJuliawithGridap/IntrowithGmsh.html)
+- [Solving a simple Poisson problem](https://filzahfiantama.github.io/FEMJuliawithGridap/Intro_PDEFEM/IntrowithGmsh.html)
 - 
 
 ## 1. Introduction
