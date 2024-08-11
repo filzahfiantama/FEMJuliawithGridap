@@ -8,7 +8,7 @@ Supervised by: Prof. Dr. rer. nat. Darius Mottaghy
 
 #### Quick access to the pluto notebooks
 - [Solving a simple Poisson problem](https://filzahfiantama.github.io/FEMJuliawithGridap/Intro_PDEFEM/IntroFEM_Gridap.html)
-- 
+- [A 2D Model with 2 Boundary Conditions along Vertical Sections (WiP)](https://filzahfiantama.github.io/FEMJuliawithGridap/2D_model_neumann%20(wip)/2D_model_neumann.html)
 
 ## 1. Introduction
 
